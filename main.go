@@ -1,11 +1,9 @@
 package main
 
 import (
+	"github.com/zjswh/go-tool/nacos"
 	"mtsw/config"
-	"mtsw/core"
-	"mtsw/global"
 	"mtsw/initialize"
-	"mtsw/nacos"
 )
 
 func main() {
@@ -16,7 +14,7 @@ func main() {
 	config.SetUp()
 
 	//加载数据库
-	switch global.GVA_CONFIG.System.DbType {
+	switch config.GVA_CONFIG.System.DbType {
 		case "mysql":
 			initialize.Mysql()
 		default:
@@ -29,5 +27,5 @@ func main() {
 	//加载redis
 	initialize.Redis()
 
-	core.RunServer()
+	initialize.RunServer()
 }

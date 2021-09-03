@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"mtsw/global"
+	"mtsw/config"
 	"os"
 	"path"
 	"time"
 )
 
 func LoggerToFile() gin.HandlerFunc  {
-	logFilePath := global.GVA_CONFIG.Log.Path
-	logFileName := global.GVA_CONFIG.Log.Name
+	logFilePath := config.GVA_CONFIG.Log.Path
+	logFileName := config.GVA_CONFIG.Log.Name
 	fileName := path.Join(logFilePath, logFileName)
 
 	//创建文件夹

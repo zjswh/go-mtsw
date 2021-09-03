@@ -1,12 +1,34 @@
 package initialize
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"mtsw/config"
 	"mtsw/middleware"
 	"mtsw/router"
 	response2 "mtsw/types/response"
 	"net/http"
+	"time"
 )
+
+func RunServer() {
+	//加载路由
+	_router := Routers()
+
+	address := fmt.Sprintf(":%d", config.GVA_CONFIG.System.Addr)
+
+	//http
+	s := &http.Server{
+		Addr:           address,
+		Handler:        _router,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	s.ListenAndServe()
+}
+
 
 func Routers() *gin.Engine {
 	Router := gin.Default()

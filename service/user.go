@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/Chain-Zhang/pinyin"
 	"github.com/gin-gonic/gin"
+	"github.com/zjswh/go-tool/ipSearch"
 	"math"
-	"mtsw/global"
+	"mtsw/config"
 	"mtsw/middleware"
 	response2 "mtsw/types/response"
 	"mtsw/utils"
-	"mtsw/utils/ipSearch"
 	"strconv"
 	"strings"
 )
@@ -34,9 +34,9 @@ type CUserInfo struct {
 	OpenUid     string `json:"openUid"`
 }
 
-func GetUserInfo(c *gin.Context) global.UserInfo {
+func GetUserInfo(c *gin.Context) config.UserInfo {
 	parse := c.GetString("userInfo")
-	userInfo := global.UserInfo{}
+	userInfo := config.UserInfo{}
 	json.Unmarshal([]byte(parse), &userInfo)
 	return userInfo
 }
@@ -59,7 +59,7 @@ func CheckLogin() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		url := global.GVA_CONFIG.Param.BGatewayHost + "/v1/Passport/Index/getLoginInfo"
+		url := config.GVA_CONFIG.Param.BGatewayHost + "/v1/Passport/Index/getLoginInfo"
 		url = fmt.Sprintf("%s?token=%s&path=/%s&method=%s", url, token, c.FullPath(), c.Request.Method)
 		res, _ := utils.RequestGet(url)
 		var result response2.Response
@@ -72,50 +72,6 @@ func CheckLogin() gin.HandlerFunc {
 
 		userInfo, _ := json.Marshal(result.Data)
 		c.Set("userInfo", string(userInfo))
-		c.Next()
-	}
-}
-
-func CheckSignature() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		method := c.Request.Method
-		unionId, signature, time := "", "", 0
-		if method == "GET" {
-			signature = c.DefaultQuery("signature", "")
-			unionId = c.DefaultQuery("unionId", "")
-			time = utils.DefaultIntParam("time", 0, c)
-		} else {
-			signature = c.DefaultPostForm("signature", "")
-			unionId = c.DefaultPostForm("unionId", "")
-			time = utils.DefaultIntFormValue("time", 0, c)
-		}
-
-		if unionId == "" || signature == "" || time == 0 {
-			response2.ParamError("参数缺失", c)
-			c.Abort()
-			return
-		}
-
-		//验证签名
-		key := fmt.Sprintf("%d%s%s", time, unionId, "gdy_openapi")
-		sign := utils.Reverse(utils.MD5([]byte(key)))
-		if sign != signature {
-			response2.Result(10004, "", "鉴权失败", c)
-			c.Abort()
-			return
-		}
-		arr := strings.Split(unionId, "-")
-		uin, _ := strconv.Atoi(arr[0])
-		accountId, _ := strconv.Atoi(arr[1])
-
-		userInfo := UserInfo{
-			AccountId: accountId,
-			Uin: uin,
-		}
-		userInfoData, _ := json.Marshal(userInfo)
-
-		c.Set("userInfo", string(userInfoData))
-		c.Set("isOpen", 1)
 		c.Next()
 	}
 }
@@ -133,7 +89,7 @@ func GetCUserInfo(c *gin.Context) CUserInfo {
 		return defaultCUserInfo(c)
 	}
 
-	info, _ := global.GVA_REDIS.Get(realToken).Result()
+	info, _ := config.GVA_REDIS.Get(realToken).Result()
 	json.Unmarshal([]byte(info), &userInfo)
 	return userInfo
 }

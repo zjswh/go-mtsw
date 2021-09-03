@@ -2,9 +2,9 @@ package caseService
 
 import (
 	"errors"
-	"mtsw/global"
+	"github.com/zjswh/go-tool/ossService"
+	"mtsw/config"
 	"mtsw/model"
-	"mtsw/utils/ossService"
 )
 
 const CaseNumLimit = 20
@@ -35,7 +35,7 @@ func GetCaseList(uin, aid int) (interface{}, error) {
 		Uin: uin,
 		Aid: aid,
 	}
-	tmpList, err := showCase.GetList(global.GVA_DB)
+	tmpList, err := showCase.GetList(config.GVA_DB)
 	if err != nil {
 		return tmpList, err
 	}
@@ -48,13 +48,13 @@ func GetCaseList(uin, aid int) (interface{}, error) {
 		for _, v := range tmpList {
 			caseIdArr = append(caseIdArr, v.Id)
 		}
-		goodsList, _ := model.GetCaseGoodsByCaseIdArr(global.GVA_DB, caseIdArr)
+		goodsList, _ := model.GetCaseGoodsByCaseIdArr(config.GVA_DB, caseIdArr)
 		if len(goodsList) > 0 {
 			for _, v := range goodsList {
 				goodsIdArr = append(goodsIdArr, v.GoodsId)
 				caseMap[v.CaseId] = v.GoodsId
 			}
-			imgList, _ := model.GetImgListByGoodsIdArr(global.GVA_DB, goodsIdArr)
+			imgList, _ := model.GetImgListByGoodsIdArr(config.GVA_DB, goodsIdArr)
 			for _, v := range imgList {
 				imgMap[v.GoodsId] = ossService.Get(v.Img, uin, module)
 			}
@@ -82,7 +82,7 @@ func GetCaseCount(uin, aid int) (int64, error) {
 		Uin: uin,
 		Aid: aid,
 	}
-	count, err := showCase.GetCount(global.GVA_DB)
+	count, err := showCase.GetCount(config.GVA_DB)
 	if err != nil {
 		return 0, err
 	}
@@ -95,7 +95,7 @@ func GetCaseInfo(id int) (interface{}, error) {
 		Id: id,
 	}
 
-	err := showCase.GetInfo(global.GVA_DB)
+	err := showCase.GetInfo(config.GVA_DB)
 	if err != nil {
 		return showCase, err
 	}
@@ -114,7 +114,7 @@ func CreateCase(uin, aid int, title string) (int, error) {
 		Title: title,
 	}
 
-	count, err := showCase.GetCount(global.GVA_DB)
+	count, err := showCase.GetCount(config.GVA_DB)
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +123,7 @@ func CreateCase(uin, aid int, title string) (int, error) {
 
 	}
 
-	err = showCase.Create(global.GVA_DB)
+	err = showCase.Create(config.GVA_DB)
 	if err != nil {
 		return 0, err
 	}
@@ -136,7 +136,7 @@ func UpdateCase(id int, title string) error {
 		Title: title,
 	}
 
-	err := showCase.Update(global.GVA_DB, "title", "updateTime")
+	err := showCase.Update(config.GVA_DB, "title", "updateTime")
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func DeleteCase(id int) error {
 		Status: 0,
 	}
 
-	err := showCase.Update(global.GVA_DB, "status", "updateTime")
+	err := showCase.Update(config.GVA_DB, "status", "updateTime")
 	if err != nil {
 		return err
 	}
@@ -163,14 +163,14 @@ func GetCaseGoodsList(id, uin, page, num int) (interface{}, error) {
 	caseBindModel := model.ShowcaseBindGoods{
 		CaseId: id,
 	}
-	tmpList, err := caseBindModel.GetGoodsList(global.GVA_DB, page, num)
+	tmpList, err := caseBindModel.GetGoodsList(config.GVA_DB, page, num)
 	if len(tmpList) > 0 {
 		imgMap := map[int]string{}
 		goodsIdArr := []int{}
 		for _, v := range tmpList {
 			goodsIdArr = append(goodsIdArr, v.GoodsId)
 		}
-		imgList, _ := model.GetImgListByGoodsIdArr(global.GVA_DB, goodsIdArr)
+		imgList, _ := model.GetImgListByGoodsIdArr(config.GVA_DB, goodsIdArr)
 		for _, v := range imgList {
 			imgMap[v.GoodsId] = ossService.Get(v.Img, uin, module)
 		}
@@ -192,7 +192,7 @@ func GetCaseGoodsCount(id int) (int64, error) {
 	caseBindModel := model.ShowcaseBindGoods{
 		CaseId: id,
 	}
-	count, err := caseBindModel.GetGoodsCount(global.GVA_DB)
+	count, err := caseBindModel.GetGoodsCount(config.GVA_DB)
 
 	return count, err
 }
@@ -204,7 +204,7 @@ func GetGoodsList(id, uin, aid, categoryId, page, num int) (interface{}, error) 
 		Aid:        aid,
 		CategoryId: categoryId,
 	}
-	tmpList, err := goodsModel.GetListWithCase(global.GVA_DB, id, page, num)
+	tmpList, err := goodsModel.GetListWithCase(config.GVA_DB, id, page, num)
 	if len(tmpList) > 0 {
 		imgMap := map[int]string{}
 		goodsIdArr := []int{}
@@ -212,7 +212,7 @@ func GetGoodsList(id, uin, aid, categoryId, page, num int) (interface{}, error) 
 			goodsIdArr = append(goodsIdArr, v.Id)
 		}
 
-		imgList, _ := model.GetImgListByGoodsIdArr(global.GVA_DB, goodsIdArr)
+		imgList, _ := model.GetImgListByGoodsIdArr(config.GVA_DB, goodsIdArr)
 		for _, v := range imgList {
 			imgMap[v.GoodsId] = ossService.Get(v.Img, uin, module)
 		}
@@ -244,7 +244,7 @@ func GetGoodsCount(uin, aid, categoryId int) (int64, error) {
 		CategoryId: categoryId,
 		Status:     -1,
 	}
-	count, err := goodsModel.GetCountWithCase(global.GVA_DB)
+	count, err := goodsModel.GetCountWithCase(config.GVA_DB)
 	return count, err
 }
 
@@ -255,11 +255,11 @@ func UpdateCaseGoodsTopStatus(id, goodsId, isTop int) error {
 	}
 	//重置其它的状态
 	if isTop == 1 {
-		caseGoodsModel.ClearTopStatus(global.GVA_DB)
+		caseGoodsModel.ClearTopStatus(config.GVA_DB)
 	}
 
 	caseGoodsModel.IsTop = isTop
-	err := caseGoodsModel.Update(global.GVA_DB, "updateTime", "isTop")
+	err := caseGoodsModel.Update(config.GVA_DB, "updateTime", "isTop")
 
 	//发送DMS通知
 
@@ -276,11 +276,11 @@ func UpdateCaseGoodsExplainingStatus(id, goodsId, isExplaining int) error {
 	}
 	//重置其它的状态
 	if isExplaining == 1 {
-		caseGoodsModel.ClearExplainingStatus(global.GVA_DB)
+		caseGoodsModel.ClearExplainingStatus(config.GVA_DB)
 	}
 
 	caseGoodsModel.IsExplaining = isExplaining
-	err := caseGoodsModel.Update(global.GVA_DB, "updateTime", "isExplaining")
+	err := caseGoodsModel.Update(config.GVA_DB, "updateTime", "isExplaining")
 
 	//发送DMS通知
 
@@ -293,6 +293,6 @@ func AddGoods(id int, addGoodsId, deleteGoodsId string) (interface{}, error) {
 	caseBindModel := model.ShowcaseBindGoods{
 		CaseId: id,
 	}
-	tmpList, err := caseBindModel.GetGoodsList(global.GVA_DB, 0, 0)
+	tmpList, err := caseBindModel.GetGoodsList(config.GVA_DB, 0, 0)
 	return tmpList, err
 }

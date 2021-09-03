@@ -6,13 +6,13 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"mtsw/global"
+	"mtsw/config"
 	"os"
 )
 
 func Mysql() {
-	config := global.GVA_CONFIG.Mysql
-	link := config.Username + ":" + config.Password + "@(" + config.Path + ")/" + config.Dbname + "?" + config.Config
+	conf := config.GVA_CONFIG.Mysql
+	link := conf.Username + ":" + conf.Password + "@(" + conf.Path + ")/" + conf.Dbname + "?" + conf.Config
 	if db, err := gorm.Open(mysql.Open(link), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,                              // 使用单数表名，启用该选项后，`User` 表将是`user`
@@ -22,18 +22,15 @@ func Mysql() {
 		fmt.Println("mysql connect failed", err.Error())
 		os.Exit(0)
 	} else {
-
-		global.GVA_DB = db
+		config.GVA_DB = db
 		sqlDb, _ := db.DB()
-		sqlDb.SetMaxIdleConns(config.MaxIdleConns)
-		sqlDb.SetMaxOpenConns(config.MaxOpenConns)
-		//global.GVA_DB.SingularTable(true)
+		sqlDb.SetMaxIdleConns(conf.MaxIdleConns)
+		sqlDb.SetMaxOpenConns(conf.MaxOpenConns)
+		//config.GVA_DB.SingularTable(true)
 	}
 
 }
 
 func DBTables() {
-	//global.GVA_DB.AutoMigrate(
-	//	model.User{},
-	//	)
+
 }

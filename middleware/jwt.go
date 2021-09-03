@@ -3,7 +3,7 @@ package middleware
 import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"mtsw/global"
+	"mtsw/config"
 )
 
 type JWT struct {
@@ -23,7 +23,7 @@ var (
 )
 
 func NewJwt() *JWT {
-	return &JWT{[]byte(global.GVA_CONFIG.Jwt.SigningKey)}
+	return &JWT{[]byte(config.GVA_CONFIG.Jwt.SigningKey)}
 }
 
 func JwtAuth(token string) string {

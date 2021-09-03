@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/xinliangnote/go-util/mail"
-	"mtsw/global"
+	"mtsw/config"
 	response2 "mtsw/types/response"
 	"runtime/debug"
 	"strings"
@@ -28,11 +28,11 @@ func Exception() gin.HandlerFunc {
 				body  = strings.ReplaceAll(body, "{DebugStack}", DebugStack)
 
 				options := &mail.Options{
-					MailHost : global.GVA_CONFIG.Email.Host,
-					MailPort : global.GVA_CONFIG.Email.Port,
-					MailUser : global.GVA_CONFIG.Email.User,
-					MailPass : global.GVA_CONFIG.Email.Pass,
-					MailTo   : global.GVA_CONFIG.Email.AdminUser,
+					MailHost : config.GVA_CONFIG.Email.Host,
+					MailPort : config.GVA_CONFIG.Email.Port,
+					MailUser : config.GVA_CONFIG.Email.User,
+					MailPass : config.GVA_CONFIG.Email.Pass,
+					MailTo   : config.GVA_CONFIG.Email.AdminUser,
 					Subject  : subject,
 					Body     : body,
 				}

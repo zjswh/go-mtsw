@@ -9,7 +9,7 @@ import (
 	"github.com/tealeg/xlsx"
 	"io/ioutil"
 	"math/rand"
-	"mtsw/global"
+	"mtsw/config"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,8 +50,8 @@ func Request(url string, data map[string]interface{}, header map[string]interfac
 	}
 
 	//获取环境变量
-	if global.GVA_CONFIG.Param.XCaStage != "" {
-		header["x-ca-stage"] = global.GVA_CONFIG.Param.XCaStage
+	if config.GVA_CONFIG.Param.XCaStage != "" {
+		header["x-ca-stage"] = config.GVA_CONFIG.Param.XCaStage
 	}
 
 	client := &http.Client{}
@@ -108,9 +108,9 @@ func Export(c *gin.Context, filename string, file *xlsx.File)  {
 
 func SendDms(topic string, cmd string, uin int, data interface{}, withUin bool)  {
 	extra, _ := json.Marshal(data)
-	url := global.GVA_CONFIG.Param.MessageHost + "/v1/message/Index/send"
+	url := config.GVA_CONFIG.Param.MessageHost + "/v1/message/Index/send"
 	if !withUin {
-		url = global.GVA_CONFIG.Param.MessageHost + "/v1/message/Index/sendDms"
+		url = config.GVA_CONFIG.Param.MessageHost + "/v1/message/Index/sendDms"
 	}
 	res, err := Request(url, map[string]interface{}{
 		"topic": topic,

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"html"
-	"mtsw/global"
+	"mtsw/config"
 	"mtsw/model"
 	"mtsw/types"
 	"mtsw/utils"
 	"mtsw/utils/appConst"
-	"mtsw/utils/ossService"
+	"github.com/zjswh/go-tool/ossService"
 	"strconv"
 	"strings"
 )
@@ -60,7 +60,7 @@ type GoodsMsg struct {
 }
 
 func GetMailInfo(uin, aid int) (model.MtswMail, error) {
-	info, err := model.GetMailInfo(uin, aid)
+	info, err := model.GetMailInfo(config.GVA_DB, uin, aid)
 	return info, err
 }
 
@@ -95,14 +95,14 @@ func SetMailInfo(req types.SetMailInfoStruct, uin, aid int) error {
 	if isNew == true {
 		mail.Uin = uin
 		mail.Aid = aid
-		err = mail.Create()
+		err = mail.Create(config.GVA_DB)
 	} else {
 		mail.Id = info.Id
-		err = mail.UpdateMail()
+		err = mail.UpdateMail(config.GVA_DB)
 	}
 
 	//清除缓存
-	global.GVA_REDIS.Del(appConst.GetMailInfoKey(uin, aid))
+	config.GVA_REDIS.Del(appConst.GetMailInfoKey(uin, aid))
 	return err
 }
 
@@ -113,7 +113,7 @@ func CreateCategory(name string, uin, aid int) (int, error) {
 		Aid:  aid,
 		Sort: 99,
 	}
-	err := category.Create(global.GVA_DB)
+	err := category.Create(config.GVA_DB)
 	return category.Id, err
 }
 
@@ -124,7 +124,7 @@ func UpdateCategory(name string, categoryId, uin, aid int) error {
 		Aid:  aid,
 		Name: name,
 	}
-	err := category.GetInfo(global.GVA_DB)
+	err := category.GetInfo(config.GVA_DB)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func UpdateCategory(name string, categoryId, uin, aid int) error {
 		Id:   categoryId,
 		Name: name,
 	}
-	err = category.Update(global.GVA_DB, "name")
+	err = category.Update(config.GVA_DB, "name")
 	return err
 }
 
@@ -145,7 +145,7 @@ func SaveCategories(categoryIds string) error {
 			Id:   id,
 			Sort: k + 1,
 		}
-		info.Update(global.GVA_DB, "sort")
+		info.Update(config.GVA_DB, "sort")
 	}
 	return nil
 }
@@ -153,7 +153,7 @@ func SaveCategories(categoryIds string) error {
 func GetCategories(uin, aid int) ([]CategoryList, error) {
 	list := []CategoryList{}
 	var err error
-	tmpList, err := model.GetCategoryList(global.GVA_DB, uin, aid)
+	tmpList, err := model.GetCategoryList(config.GVA_DB, uin, aid)
 	for _, v := range tmpList {
 		list = append(list, CategoryList{
 			Id:   v.Id,
@@ -171,7 +171,7 @@ func AddGoods(req types.GoodsStruct, uin, aid int) (int, error) {
 		return 0, err
 	}
 	//开启事务
-	db := global.GVA_DB.Begin()
+	db := config.GVA_DB.Begin()
 	err = goods.Create(db)
 	if err != nil {
 		db.Rollback()
@@ -205,7 +205,7 @@ func GetGoodsMsg(goodsId, uin int) (GoodsMsg, error) {
 	goods := model.Goods{
 		Id: goodsId,
 	}
-	err := goods.GetInfo(global.GVA_DB)
+	err := goods.GetInfo(config.GVA_DB)
 	goodsInfo := GoodsMsg{
 		ID:                goods.Id,
 		Uin:               goods.Uin,
@@ -275,7 +275,7 @@ func EditGoods(req types.GoodsStruct, uin, aid int) error {
 		return err
 	}
 	//
-	oldProductList, err := model.GetProductList(global.GVA_DB, req.GoodsID)
+	oldProductList, err := model.GetProductList(config.GVA_DB, req.GoodsID)
 	if err != nil {
 		return err
 	}
@@ -303,18 +303,18 @@ func EditGoods(req types.GoodsStruct, uin, aid int) error {
 		return errors.New("已设置的商品库存数不得减少")
 	}
 
-	oldImgList, err := model.GetImgList(global.GVA_DB, req.GoodsID)
+	oldImgList, err := model.GetImgList(config.GVA_DB, req.GoodsID)
 	if err != nil {
 		return err
 	}
 
-	oldProductSpec, err := model.GetProductList(global.GVA_DB, req.GoodsID)
+	oldProductSpec, err := model.GetProductList(config.GVA_DB, req.GoodsID)
 	if err != nil {
 		return err
 	}
 
 	//开启事务
-	db := global.GVA_DB.Begin()
+	db := config.GVA_DB.Begin()
 	goods.Id = req.GoodsID
 	err = goods.UpdateGoods(db)
 	if err != nil {
@@ -366,7 +366,7 @@ func EditGoods(req types.GoodsStruct, uin, aid int) error {
 }
 
 func DeleteGoods(goodsId, uin int) error {
-	db := global.GVA_DB.Begin()
+	db := config.GVA_DB.Begin()
 	goods := model.Goods{
 		Id:  goodsId,
 		Uin: uin,
@@ -377,7 +377,7 @@ func DeleteGoods(goodsId, uin int) error {
 		db.Rollback()
 		return err
 	}
-	oldImgList, err := model.GetImgList(global.GVA_DB, goodsId)
+	oldImgList, err := model.GetImgList(config.GVA_DB, goodsId)
 	if err != nil {
 		db.Rollback()
 		return err
@@ -411,7 +411,7 @@ func SetGoodsStatus(goodsId, status int)  error {
 		Id: goodsId,
 		Status: status,
 	}
-	err := goods.UpdateStatus(global.GVA_DB)
+	err := goods.UpdateStatus(config.GVA_DB)
 	return err
 }
 
@@ -420,13 +420,13 @@ func GetGoodsList(name string, uin, aid, categoryId, goodsType, status, sTime, e
 		Uin: uin,
 		Aid: aid,
 	}
-	tmpList, err := goods.GetList(global.GVA_DB, name, categoryId, goodsType, status, sTime, eTime, page, num)
+	tmpList, err := goods.GetList(config.GVA_DB, name, categoryId, goodsType, status, sTime, eTime, page, num)
 	return tmpList, err
 }
 
 func getImgList(goodsId, uin int) ([]string, error) {
 	imgList := []string{}
-	tmpList, err := model.GetImgList(global.GVA_DB, goodsId)
+	tmpList, err := model.GetImgList(config.GVA_DB, goodsId)
 	if err != nil {
 		return imgList, err
 	}
@@ -439,7 +439,7 @@ func getImgList(goodsId, uin int) ([]string, error) {
 
 func getSpec(goodsId int) ([]types.GoodsSpec, error) {
 	specList := []types.GoodsSpec{}
-	tmpList, err := model.GetSpecList(global.GVA_DB, goodsId)
+	tmpList, err := model.GetSpecList(config.GVA_DB, goodsId)
 	if err != nil {
 		return specList, err
 	}
@@ -474,7 +474,7 @@ func getProductInfo(goodsId, uin int) ([]types.ResponseGoodsSpecInfo, float64, f
 	sum := 0
 	stock := 0
 	minPrice, maxPrice := price, price
-	tmpList, err := model.GetProductList(global.GVA_DB, goodsId)
+	tmpList, err := model.GetProductList(config.GVA_DB, goodsId)
 	if err != nil {
 		return productList, minPrice, maxPrice, sum, stock, err
 	}

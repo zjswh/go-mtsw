@@ -1,7 +1,7 @@
 package model
 
 import (
-	"mtsw/global"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -24,15 +24,15 @@ func (m *MtswMail) TableName() string {
 	return "mtsw_mail"
 }
 
-func (m *MtswMail) Create() error {
+func (m *MtswMail) Create(Db *gorm.DB) error {
 	m.CreateTime = time.Now().Unix()
-	err := global.GVA_DB.Model(&m).Create(&m).Error
+	err := Db.Model(&m).Create(&m).Error
 	return err
 }
 
-func (m *MtswMail) Update(field ...string) error {
+func (m *MtswMail) Update(Db *gorm.DB, field ...string) error {
 	m.UpdateTime = time.Now().Unix()
-	sql := global.GVA_DB.Model(&m)
+	sql := Db.Model(&m)
 	if len(field) > 0 {
 		sql = sql.Select(field)
 	}
@@ -40,20 +40,20 @@ func (m *MtswMail) Update(field ...string) error {
 	return err
 }
 
-func (m *MtswMail) GetInfo() error {
-	sql := global.GVA_DB.Model(m).Where("id = ? ", m.Id)
+func (m *MtswMail) GetInfo(Db *gorm.DB) error {
+	sql := Db.Model(m).Where("id = ? ", m.Id)
 	err := sql.First(&m).Error
 	return err
 }
 
-func (m *MtswMail) UpdateMail() error {
-	err := m.Update("title", "intro", "shareImg", "contactNumber", "contactNumberDefault", "qrCode", "qrCodeDefault")
+func (m *MtswMail) UpdateMail(Db *gorm.DB) error {
+	err := m.Update(Db, "title", "intro", "shareImg", "contactNumber", "contactNumberDefault", "qrCode", "qrCodeDefault")
 	return err
 }
 
-func GetMailInfo(uin, aid int) (MtswMail, error) {
+func GetMailInfo(Db *gorm.DB, uin, aid int) (MtswMail, error) {
 	info := MtswMail{}
-	sql := global.GVA_DB.Model(MtswMail{}).Where("uin = ? AND aid = ? ", uin, aid)
+	sql := Db.Model(MtswMail{}).Where("uin = ? AND aid = ? ", uin, aid)
 	err := sql.First(&info).Error
 	return info, err
 }

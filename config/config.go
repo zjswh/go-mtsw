@@ -2,12 +2,29 @@ package config
 
 import (
 	"fmt"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/fsnotify/fsnotify"
+	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
-	"mtsw/global"
-	"mtsw/nacos"
+	"github.com/zjswh/go-tool/nacos"
+	"gorm.io/gorm"
 	"os"
 )
+
+var (
+	GVA_CONFIG Server
+	GVA_VP     *viper.Viper
+	GVA_DB     *gorm.DB
+	GVA_REDIS  *redis.Client
+	GVA_OSS_BUCKET *oss.Bucket
+)
+
+type UserInfo struct {
+	AccountId int `json:"accountId"`
+	Aid int `json:"aid"`
+	Uin int `json:"uin"`
+	Name string `json:"name"`
+}
 
 type Server struct {
 	Mysql  Mysql  `json:"mysql"`
@@ -106,9 +123,7 @@ func SetUp() {
 
 	//判断配置文件是否已存在 不存在则去环境变量中读取
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		fmt.Println(1213)
 		config, err := nacos.GetConfig("gdy")
-		fmt.Println(config)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -131,13 +146,13 @@ func SetUp() {
 	v.WatchConfig()
 	v.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Println("config file changed:", e.Name)
-		if err := v.Unmarshal(&global.GVA_CONFIG); err != nil {
+		if err := v.Unmarshal(&GVA_CONFIG); err != nil {
 			fmt.Println(err)
 		}
 	})
-	if err := v.Unmarshal(&global.GVA_CONFIG); err != nil {
+	if err := v.Unmarshal(&GVA_CONFIG); err != nil {
 		fmt.Println(err)
 	}
-	global.GVA_VP = v
+	GVA_VP = v
 }
 
