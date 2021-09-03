@@ -1,0 +1,20 @@
+stages:
+  - build
+  - notify
+
+variables:
+  REGISTRY_PWD: "cyh@aodian123"
+  REGISTRY_USER: "chenyihan@1812501212048408"
+  REGISTRY: "registry.cn-hangzhou.aliyuncs.com"
+  IMAGE: "registry.cn-hangzhou.aliyuncs.com/gdypub/go-mtsw"
+
+build:
+  stage: build
+  before_script:
+    - export PROJECT_TAG=`git rev-parse --short HEAD`
+    - docker login --username=$REGISTRY_USER --password=$REGISTRY_PWD $REGISTRY
+  script:
+    - docker build -t $IMAGE:$PROJECT_TAG .
+    - docker push $IMAGE:$PROJECT_TAG
+    - docker rmi $IMAGE:$PROJECT_TAG
+    - echo 打包成功,镜像：$IMAGE:$PROJECT_TAG
